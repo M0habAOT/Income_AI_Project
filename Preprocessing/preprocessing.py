@@ -2,6 +2,7 @@
    
 
 import pandas as pd
+import joblib
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import  MinMaxScaler
 from sklearn.preprocessing import  OneHotEncoder
@@ -11,8 +12,7 @@ import seaborn as sns
 sns.set_style("whitegrid")
 plt.rcParams["figure.figsize"] = (8,5)
 
-processed_data=pd.read_csv("train_data.csv")
-processed_data_test=pd.read_csv("test_data.csv")
+
 encoders={}
 def clean(df):
   """
@@ -54,148 +54,154 @@ def onehot_encoding_test(df,column):
     encoded_df=pd.DataFrame(encoded_data,columns=onehotencoder.get_feature_names_out(column),index=df.index)
     return pd.concat([df.drop(columns=column),encoded_df],axis=1)
    
-    
+scale=MinMaxScaler() 
 #print(train_data.isnull().sum()) nulls 0
 #train data 
+if __name__ == "__main__":
+    processed_data=pd.read_csv("Preprocessing/train_data.csv")
+    processed_data_test=pd.read_csv("Preprocessing/test_data.csv")
+    processed_data=clean(processed_data)
+    print(processed_data.duplicated().sum())
+    print(processed_data[processed_data.duplicated(keep=False)]) #keep =false to also get the duplicated rows not only the original
+    processed_data.drop_duplicates(inplace=True) #dropped the duplicates
 
-processed_data=clean(processed_data)
-print(processed_data.duplicated().sum())
-print(processed_data[processed_data.duplicated(keep=False)]) #keep =false to also get the duplicated rows not only the original
-processed_data.drop_duplicates(inplace=True) #dropped the duplicates
+    print(processed_data.info())
+    print(processed_data.iloc[:,[0,2,4,10,11,12]]) # the numeric data
+    #before the outliers
+    print(processed_data["age"])
+    print(processed_data["fnlwgt"])
+    print(processed_data["education-num"])
+    print(processed_data["capital-gain"])
+    print(processed_data["capital-loss"])
+    print(processed_data["hours-per-week"])
 
-print(processed_data.info())
-print(processed_data.iloc[:,[0,2,4,10,11,12]]) # the numeric data
-#before the outliers
-print(processed_data["age"])
-print(processed_data["fnlwgt"])
-print(processed_data["education-num"])
-print(processed_data["capital-gain"])
-print(processed_data["capital-loss"])
-print(processed_data["hours-per-week"])
+    #####
+    detect_outliers("age",processed_data)
+    detect_outliers("fnlwgt",processed_data)
+    detect_outliers("education-num",processed_data)
+    detect_outliers("capital-gain",processed_data)
+    detect_outliers("capital-loss",processed_data)
+    detect_outliers("hours-per-week",processed_data)
 
-#####
-detect_outliers("age",processed_data)
-detect_outliers("fnlwgt",processed_data)
-detect_outliers("education-num",processed_data)
-detect_outliers("capital-gain",processed_data)
-detect_outliers("capital-loss",processed_data)
-detect_outliers("hours-per-week",processed_data)
-
-#after removing outliers
-print(processed_data["age"])
-print(processed_data["fnlwgt"])
-print(processed_data["education-num"])
-print(processed_data["capital-gain"])
-print(processed_data["capital-loss"])
-print(processed_data["hours-per-week"])
-
-
-
-##encoding data
-
-print(processed_data.head())
-processed_data["sex"]=labeldata("sex",processed_data)  #1 for male and 0 for female
-processed_data["Income"]=labeldata("Income",processed_data) # 0 for <=50 and 1 >=50
-print(processed_data.head())  
-processed_data=onehot_encoding(processed_data,["workclass","education","marital-status","occupation","relationship","race","native-country"])
-print(processed_data.head())
-    
-
-
-#scale the train data
-scale=MinMaxScaler()
-print(processed_data.head())
-processed_data[["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]]=scale.fit_transform(processed_data[["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]])
-print(processed_data.head())
+    #after removing outliers
+    print(processed_data["age"])
+    print(processed_data["fnlwgt"])
+    print(processed_data["education-num"])
+    print(processed_data["capital-gain"])
+    print(processed_data["capital-loss"])
+    print(processed_data["hours-per-week"])
 
 
 
+    ##encoding data
 
-##for the test data
-#print(processed_data_test.isnull().sum()) no nulls
+    print(processed_data.head())
+    processed_data["sex"]=labeldata("sex",processed_data)  #1 for male and 0 for female
+    processed_data["Income"]=labeldata("Income",processed_data) # 0 for <=50 and 1 >=50
+    print(processed_data.head())  
+    processed_data=onehot_encoding(processed_data,["workclass","education","marital-status","occupation","relationship","race","native-country"])
+    print(processed_data.head())
+        
 
-processed_data_test=clean(processed_data_test)
-print(processed_data_test.duplicated().sum())
-print(processed_data_test[processed_data_test.duplicated(keep=False)]) #keep =false to also get the duplicated rows not only the original
-processed_data_test.drop_duplicates(inplace=True) #dropped the duplicates
 
-print(processed_data_test["age"])
-print(processed_data_test["fnlwgt"])
-print(processed_data_test["education-num"])
-print(processed_data_test["capital-gain"])
-print(processed_data_test["capital-loss"])
-print(processed_data_test["hours-per-week"])
+    #scale the train data
 
-#####
-detect_outliers("age",processed_data_test)
-detect_outliers("fnlwgt",processed_data_test)
-detect_outliers("education-num",processed_data_test)
-detect_outliers("capital-gain",processed_data_test)
-detect_outliers("capital-loss",processed_data_test)
-detect_outliers("hours-per-week",processed_data_test)
-
-#after removing outliers
-print(processed_data_test["age"])
-print(processed_data_test["fnlwgt"])
-print(processed_data_test["education-num"])
-print(processed_data_test["capital-gain"])
-print(processed_data_test["capital-loss"])
-print(processed_data_test["hours-per-week"])
+    print(processed_data.head())
+    processed_data[["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]]=scale.fit_transform(processed_data[["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]])
+    print(processed_data.head())
 
 
 
 
-##encoding data
+    ##for the test data
+    #print(processed_data_test.isnull().sum()) no nulls
 
-print(processed_data_test.head())
-processed_data_test["sex"]=labeldatatest("sex",processed_data_test)  #1 for male and 0 for female
-processed_data_test["Income"]=labeldatatest("Income",processed_data_test) # 0 for <=50 and 1 >=50
-print(processed_data_test.head())  
-processed_data_test=onehot_encoding_test(processed_data_test,["workclass","education","marital-status","occupation","relationship","race","native-country"])
-print(processed_data_test.head())
-    
+    processed_data_test=clean(processed_data_test)
+    print(processed_data_test.duplicated().sum())
+    print(processed_data_test[processed_data_test.duplicated(keep=False)]) #keep =false to also get the duplicated rows not only the original
+    processed_data_test.drop_duplicates(inplace=True) #dropped the duplicates
 
-#scaling testdata
+    print(processed_data_test["age"])
+    print(processed_data_test["fnlwgt"])
+    print(processed_data_test["education-num"])
+    print(processed_data_test["capital-gain"])
+    print(processed_data_test["capital-loss"])
+    print(processed_data_test["hours-per-week"])
 
-processed_data_test[["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]]=scale.transform(processed_data_test[["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]])
-print(processed_data_test.head())  #trasnform without fit it learned the min and max form train data so it willnot memorize test data parameters
+    #####
+    detect_outliers("age",processed_data_test)
+    detect_outliers("fnlwgt",processed_data_test)
+    detect_outliers("education-num",processed_data_test)
+    detect_outliers("capital-gain",processed_data_test)
+    detect_outliers("capital-loss",processed_data_test)
+    detect_outliers("hours-per-week",processed_data_test)
+
+    #after removing outliers
+    print(processed_data_test["age"])
+    print(processed_data_test["fnlwgt"])
+    print(processed_data_test["education-num"])
+    print(processed_data_test["capital-gain"])
+    print(processed_data_test["capital-loss"])
+    print(processed_data_test["hours-per-week"])
 
 
-processed_data.to_csv("processed_train_data.csv", index=False)
-processed_data_test.to_csv("processed_test_data.csv", index=False)
-# After drop_duplicates for train:
-processed_data.drop_duplicates(inplace=True)
-processed_data.reset_index(drop=True, inplace=True)  # ← add this
-
-# After drop_duplicates for test:
-processed_data_test.drop_duplicates(inplace=True)
-processed_data_test.reset_index(drop=True, inplace=True)  # ← add this
 
 
-# ///////
-num_cols = ["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]
+    ##encoding data
 
-for col in num_cols:
+    print(processed_data_test.head())
+    processed_data_test["sex"]=labeldatatest("sex",processed_data_test)  #1 for male and 0 for female
+    processed_data_test["Income"]=labeldatatest("Income",processed_data_test) # 0 for <=50 and 1 >=50
+    print(processed_data_test.head())  
+    processed_data_test=onehot_encoding_test(processed_data_test,["workclass","education","marital-status","occupation","relationship","race","native-country"])
+    print(processed_data_test.head())
+        
+
+    #scaling testdata
+
+    processed_data_test[["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]]=scale.transform(processed_data_test[["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]])
+    print(processed_data_test.head())  #trasnform without fit it learned the min and max form train data so it willnot memorize test data parameters
+
+    processed_data.to_csv("Preprocessing/processed_train_data.csv", index=False)
+    processed_data_test.to_csv("Preprocessing/processed_test_data.csv", index=False)
+    # After drop_duplicates for train:
+    processed_data.drop_duplicates(inplace=True)
+    processed_data.reset_index(drop=True, inplace=True)  # ← add this
+
+    # After drop_duplicates for test:
+    processed_data_test.drop_duplicates(inplace=True)
+    processed_data_test.reset_index(drop=True, inplace=True)  # ← add this
+
+
+    # ///////
+    num_cols = ["age","fnlwgt","education-num","capital-gain","capital-loss","hours-per-week"]
+
+    for col in num_cols:
+        plt.figure()
+        sns.histplot(processed_data[col], kde=True)
+        plt.title(f"Distribution of {col}")
+        plt.xlabel(col)
+        plt.ylabel("Count")
+        plt.show()
+
     plt.figure()
-    sns.histplot(processed_data[col], kde=True)
-    plt.title(f"Distribution of {col}")
-    plt.xlabel(col)
+    sns.countplot(x="Income", data=processed_data)
+    plt.title("Target Distribution (Income)")
+    plt.xlabel("Income")
     plt.ylabel("Count")
     plt.show()
 
-plt.figure()
-sns.countplot(x="Income", data=processed_data)
-plt.title("Target Distribution (Income)")
-plt.xlabel("Income")
-plt.ylabel("Count")
-plt.show()
+    print("Target :")
+    print(processed_data["Income"].value_counts(normalize=True))
 
-print("Target نسبة التوزيع:")
-print(processed_data["Income"].value_counts(normalize=True))
+    plt.figure(figsize=(10,8))
+    corr = processed_data[num_cols].corr()
 
-plt.figure(figsize=(10,8))
-corr = processed_data[num_cols].corr()
+    sns.heatmap(corr, annot=True, cmap="coolwarm")
+    plt.title("Correlation Heatmap (Numerical Features)")
+    plt.show()
 
-sns.heatmap(corr, annot=True, cmap="coolwarm")
-plt.title("Correlation Heatmap (Numerical Features)")
-plt.show()
+    joblib.dump(encoders, "encoders.pkl")
+    joblib.dump(onehotencoder, "onehotencoder.pkl")
+    joblib.dump(scale, "scale.pkl")
+
