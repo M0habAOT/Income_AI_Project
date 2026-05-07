@@ -35,7 +35,6 @@ The Logistic Regression model performed consistently with an accuracy of approxi
 
 ### Model 2: Support Vector Machine (SVM)
 
-### Model: Support Vector Machine (SVM)
 For this classification task, I selected the **Support Vector Machine (SVM)**. This choice was driven by SVM's proven effectiveness in high-dimensional spaces and its ability to define complex, non-linear decision boundaries using kernel functions. Specifically, the **Radial Basis Function (RBF)** kernel was used to capture intricate patterns within the census data.
 
 To optimize the model, I focused on the **'C' hyperparameter**, which acts as a regularization parameter. It controls the trade-off between achieving a low error on the training data and maximizing the margin of the decision boundary.
