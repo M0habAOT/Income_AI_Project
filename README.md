@@ -31,81 +31,60 @@ Based on the feature coefficients from the Logistic Regression model, the follow
 ## 5. Conclusion
 The Logistic Regression model performed consistently with an accuracy of approximately **84%**. Through hyperparameter tuning, I found that adjusting the regularization strength (**C**) allows for a strategic trade-off between precision and recall. For this specific dataset, a balanced 'C' provides a robust model capable of identifying high-income individuals while maintaining high overall accuracy.
 
+---
 
 ### Model 2: Support Vector Machine (SVM)
 
-I selected the **Support Vector Machine (SVM)** as the classification model due to its effectiveness in handling high-dimensional data and its ability to create non-linear decision boundaries using the RBF kernel.
+### Model: Support Vector Machine (SVM)
+For this classification task, I selected the **Support Vector Machine (SVM)**. This choice was driven by SVM's proven effectiveness in high-dimensional spaces and its ability to define complex, non-linear decision boundaries using kernel functions. Specifically, the **Radial Basis Function (RBF)** kernel was used to capture intricate patterns within the census data.
 
-To optimize the model, I experimented with the **'C' hyperparameter**, which controls the trade-off between maximizing the margin and minimizing classification error.
+To optimize the model, I focused on the **'C' hyperparameter**, which acts as a regularization parameter. It controls the trade-off between achieving a low error on the training data and maximizing the margin of the decision boundary.
 
 ---
 
-### **Experimentation Results:**
+### **Evaluation Results (C = 1)**
+Using the default regularization strength ($C=1$), the model achieved a robust balance between precision and recall. The results on the test set are as follows:
 
-| Hyperparameter (C)                   | Overall Accuracy | Precision (Class 1) | Recall (Class 1) | F1-Score |
-| :----------------------------------- | :--------------- | :------------------ | :--------------- | :------- |
-| **C = 0.01 (Strong Regularization)** | 82.56%           | **0.74**            | 0.41             | 0.52     |
-| **C = 1 (Default)**                  | **83.74%**       | 0.70                | 0.54             | **0.61** |
-| **C = 100 (Weak Regularization)**    | 82.52%           | 0.65                | **0.57**         | 0.61     |
+| Metric | Value |
+| :--- | :--- |
+| **Accuracy** | 83.74% |
+| **Precision** | 70.15% |
+| **Recall** | 54.26% |
+| **F1-Score** | 61.19% |
 
 ---
 
 ### **Confusion Matrix Analysis**
+The confusion matrix below illustrates the model's performance in terms of True Positives, True Negatives, False Positives, and False Negatives.
 
-* **C = 0.01:**
+| | Predicted: <=50K | Predicted: >50K |
+| :--- | :--- | :--- |
+| **Actual: <=50K** | **11,542** (TN) | **888** (FP) |
+| **Actual: >50K** | **1,759** (FN) | **2,087** (TP) |
 
-  * Very high Precision (0.74)
-  * Low Recall (0.41)
-  * The model is conservative → predicts fewer positive cases
-  * High False Negatives (2281)
-
-* **C = 1:**
-
-  * Balanced performance across all metrics
-  * Best overall Accuracy and F1-score
-  * Moderate False Positives and False Negatives
-
-* **C = 100:**
-
-  * Higher Recall (0.57)
-  * Lower Precision (0.65)
-  * The model becomes more aggressive → predicts more positives
-  * Increased False Positives (1208)
+* **True Negatives (11,542):** The model accurately identifies the majority of individuals in the lower-income bracket.
+* **False Positives (888):** A relatively small number of individuals were incorrectly predicted to earn >50K.
+* **False Negatives (1,759):** This indicates that approximately 45% of high-income individuals were misclassified, reflecting the model's conservative nature in the face of class imbalance.
+* **True Positives (2,087):** The model correctly identified over half of the high-income population.
 
 ---
 
-### **Analysis of Hyperparameters**
-
-* **Strong Regularization (C = 0.01):**
-  The model focuses on simplicity and avoids overfitting. This leads to **higher precision** but significantly reduces recall, meaning many high-income individuals are missed.
-
-* **Moderate Regularization (C = 1):**
-  Provides the **best balance** between precision and recall. This results in the highest overall performance, making it the most suitable choice.
-
-* **Weak Regularization (C = 100):**
-  The model tries to fit the training data more closely, increasing recall but also increasing false positives, which reduces precision.
+### **Hyperparameter Analysis**
+Based on previous experiments with varying values of **C**:
+* **Low C (0.01):** Produced a "stiffer" boundary. While this increased precision (fewer false alarms), it severely hampered recall, as the model became too cautious about predicting the positive class (>50K).
+* **High C (100):** Made the model more aggressive. While this improved recall (finding more high-income individuals), it led to a higher rate of false positives, effectively reducing overall precision.
+* **Optimal C (1):** As shown in the results above, $C=1$ provided the most balanced performance across all evaluation metrics, particularly for the F1-score.
 
 ---
 
 ## 4. Data Interpretation & Insights
-
-From the behavior of the SVM model and the dataset characteristics:
-
-* The model shows sensitivity to class imbalance, where predicting the majority class (low income) is easier.
-* Increasing the value of **C** allows the model to capture more complex patterns, improving recall but reducing precision.
-* A balanced configuration (C = 1) provides the best trade-off between detecting high-income individuals and avoiding incorrect predictions.
+The SVM model's performance confirms several key aspects of the dataset:
+* **Non-Linearity:** The effectiveness of the RBF kernel suggests that income levels are not separated by simple linear thresholds but by complex interactions between features like age, education level, and capital gains.
+* **Class Imbalance:** The higher number of False Negatives compared to False Positives shows that the model is naturally biased towards the majority class (<=50K), requiring careful tuning to ensure high-income individuals are caught.
 
 ---
 
 ## 5. Conclusion
+The Support Vector Machine model reached an accuracy of **83.74%**. Through the analysis of the confusion matrix and hyperparameter tuning, it was determined that $C=1$ with an RBF kernel serves as the optimal configuration for this specific problem. 
 
-The SVM model achieved a maximum accuracy of approximately **83.7%**.
-
-Through hyperparameter tuning, it was observed that the value of **C** plays a crucial role in controlling the model behavior:
-
-* Lower values → safer, more precise predictions
-* Higher values → more aggressive predictions with better recall
-
-For this dataset, **C = 1** provided the best balance between **Precision, Recall, and F1-score**, making it the optimal choice for the final model.
-
----
+The final model has been serialized and saved as `SVMmodel.pkl` using the `pickle` library. This ensures that the exact state of the trained model, including the learned support vectors and decision boundaries, is preserved for future inference and deployment.
