@@ -8,6 +8,7 @@ scale = joblib.load("scale.pkl")
 
 
 train = pd.read_csv("Preprocessing/processed_train_data.csv")
+features = train.drop('Income', axis=1).columns
 
 
 print("\n=== ML Predictor ===")
