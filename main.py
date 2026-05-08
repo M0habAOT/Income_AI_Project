@@ -1,14 +1,14 @@
 import pandas as pd
 import joblib
 
-# Load all fitted objects from pkl files
+
 encoders = joblib.load("encoders.pkl")
 onehotencoder = joblib.load("onehotencoder.pkl")
 scale = joblib.load("scale.pkl")
 
-# Load feature names from processed train data
+
 train = pd.read_csv("Preprocessing/processed_train_data.csv")
-features = train.drop(columns=["Income"]).columns
+
 
 print("\n=== ML Predictor ===")
 print("Choose Model:")
@@ -34,7 +34,7 @@ else:
 model = joblib.load(model_path)
 print(f"\nYou selected: {model_name}")
 
-# User input
+
 user = {
     "age": int(input("Age: ")),
     "workclass": input("Workclass: "),
@@ -54,33 +54,33 @@ user = {
 
 user_df = pd.DataFrame([user])
 
-# Strip whitespace from string columns (same as clean() in preprocessing)
+
 for col in user_df.select_dtypes(include="object").columns:
     user_df[col] = user_df[col].str.strip().str.rstrip(".")
 
-# Label encode 'sex' only (Income is the target, not an input)
 user_df["sex"] = encoders["sex"].transform(user_df["sex"])
 
-# One-hot encode categorical columns
-cat_cols = ["workclass", "education", "marital-status",
-            "occupation", "relationship", "race", "native-country"]
 
-encoded_data = onehotencoder.transform(user_df[cat_cols])
+
+
+encoded_data = onehotencoder.transform(user_df[["workclass", "education", "marital-status",
+            "occupation", "relationship", "race", "native-country"]])
 encoded_df = pd.DataFrame(
     encoded_data,
-    columns=onehotencoder.get_feature_names_out(cat_cols),
+    columns=onehotencoder.get_feature_names_out(["workclass", "education", "marital-status",
+            "occupation", "relationship", "race", "native-country"]),
     index=user_df.index
 )
-user_df = pd.concat([user_df.drop(columns=cat_cols), encoded_df], axis=1)
+user_df = pd.concat([user_df.drop(columns=["workclass", "education", "marital-status",
+            "occupation", "relationship", "race", "native-country"]), encoded_df], axis=1)
 
-# Scale numerical columns
-num_cols = ["age", "fnlwgt", "education-num", "capital-gain", "capital-loss", "hours-per-week"]
-user_df[num_cols] = scale.transform(user_df[num_cols])
 
-# Align columns with training data (fill any missing one-hot columns with 0)
+
+user_df[["age", "fnlwgt", "education-num", "capital-gain", "capital-loss", "hours-per-week"]] = scale.transform(user_df[["age", "fnlwgt", "education-num", "capital-gain", "capital-loss", "hours-per-week"]])
+# ot be the same order of features the model  is used to so it wont be confused  and if any columns is missing fill its value with 0
 user_df = user_df.reindex(columns=features, fill_value=0)
 
-# Predict
+
 prediction = model.predict(user_df)
 
 # Decode prediction back to readable label
