@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شرح مشروع الـ AI — تصنيف الدخل</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #09090b;
+  --bg2:     #111114;
+  --bg3:     #18181c;
+  --bg4:     #1f1f24;
+  --border:  #2a2a32;
+  --text:    #f0ede6;
+  --muted:   #6b6875;
+  --dim:     #9994a8;
+  --accent:  #e8c547;
+  --teal:    #4ecdc4;
+  --red:     #ff6b6b;
+  --purple:  #c084fc;
+  --green:   #4ade80;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans Arabic', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+/* ── SIDEBAR ── */
+aside {
+  position: fixed;
+  top: 0; right: 0;
+  width: 240px;
+  height: 100vh;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 50;
+  padding: 1.5rem 0 4rem;
+}
+aside::-webkit-scrollbar { width: 4px; }
+aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sb-logo {
+  padding: 0 1.25rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+.sb-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .15em;
+  color: var(--accent);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 5px;
+}
+.sb-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+}
+.nav-group { margin-bottom: .2rem; }
+.nav-group-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: .4rem 1.25rem .2rem;
+  display: block;
+}
+.nav-a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 1.25rem;
+  font-size: 12px;
+  color: var(--dim);
+  text-decoration: none;
+  transition: all .15s;
+  border-right: 2px solid transparent;
+}
+.nav-a:hover { color: var(--text); background: var(--bg3); }
+.nav-a.active { color: var(--accent); border-right-color: var(--accent); background: rgba(232,197,71,.06); }
+.nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; opacity: .5; }
+
+/* ── MAIN ── */
+main { margin-right: 240px; }
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  padding: 5rem 4rem 4rem;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -120px; left: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(232,197,71,.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+  display: block;
+}
+.hero h1 {
+  font-size: clamp(30px, 3.5vw, 50px);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+  letter-spacing: -.01em;
+}
+.hero h1 span { color: var(--accent); }
+.hero-sub { font-size: 15px; color: var(--dim); max-width: 580px; margin-bottom: 2rem; }
+.pills { display: flex; gap: 7px; flex-wrap: wrap; }
+.pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  color: var(--dim);
+  background: var(--bg3);
+}
+.pill.y { border-color: rgba(232,197,71,.4); color: var(--accent); background: rgba(232,197,71,.06); }
+.pill.t { border-color: rgba(78,205,196,.4); color: var(--teal); background: rgba(78,205,196,.06); }
+.pill.r { border-color: rgba(255,107,107,.4); color: var(--red); background: rgba(255,107,107,.06); }
+.pill.p { border-color: rgba(192,132,252,.4); color: var(--purple); background: rgba(192,132,252,.06); }
+
+/* ── PIPELINE BAR ── */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 1.5rem 4rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  overflow-x: auto;
+  direction: ltr;
+}
+.pipe-node { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.pipe-node a {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  text-decoration: none;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 14px;
+  transition: all .2s;
+}
+.pipe-node a:hover { border-color: var(--accent); color: var(--accent); }
+.pipe-lbl { font-family: var(--mono); font-size: 8px; color: var(--muted); margin-top: 5px; text-transform: uppercase; letter-spacing: .08em; }
+.pipe-arr { color: var(--muted); font-size: 16px; padding: 0 7px; flex-shrink: 0; margin-bottom: 14px; }
+
+/* ── CONTENT ── */
+.content { padding: 4rem; max-width: 880px; }
+section { margin-bottom: 5.5rem; scroll-margin-top: 1.5rem; }
+
+.sec-eye {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: .6rem;
+}
+h2.sec { font-size: 28px; font-weight: 700; margin-bottom: 1rem; line-height: 1.15; letter-spacing: -.01em; }
+h3.sub { font-size: 18px; font-weight: 600; margin: 2rem 0 .75rem; }
+p { color: #c2bfcc; margin-bottom: .9rem; line-height: 1.8; }
+strong { color: var(--text); font-weight: 600; }
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #c7e0ff;
+  direction: ltr;
+  display: inline-block;
+}
+
+/* ── CODE ── */
+.code-wrap {
+  background: #0c0c10;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  margin: 1.25rem 0;
+  overflow: hidden;
+}
+.code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  direction: ltr;
+}
+.code-dots { display: flex; gap: 5px; }
+.code-dots span { width: 9px; height: 9px; border-radius: 50%; }
+.code-dots span:nth-child(1) { background: #ff5f57; }
+.code-dots span:nth-child(2) { background: #febc2e; }
+.code-dots span:nth-child(3) { background: #28c840; }
+.code-fname { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-right: 10px; }
+.code-lang { font-family: var(--mono); font-size: 9px; color: var(--accent); background: rgba(232,197,71,.1); border: 1px solid rgba(232,197,71,.2); padding: 2px 7px; border-radius: 3px; }
+pre {
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.9;
+  direction: ltr;
+  text-align: left;
+}
+.kw  { color: #c792ea; }
+.fn  { color: #82aaff; }
+.str { color: #c3e88d; }
+.cm  { color: #4a5568; font-style: italic; }
+.num { color: #f78c6c; }
+.cls { color: #ffcb6b; }
+.var { color: #eeffff; }
+.op  { color: #89ddff; }
+
+/* ── OUTPUT ── */
+.output {
+  background: #060810;
+  border: 1px solid #1a2535;
+  border-radius: 9px;
+  padding: 1.1rem 1.4rem;
+  margin: 1rem 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.9;
+  direction: ltr;
+  text-align: left;
+}
+.ol { color: var(--muted); }
+.ov { color: var(--teal); font-weight: 500; }
+.ow { color: var(--accent); }
+.og { color: var(--green); }
+.or { color: var(--red); }
+
+/* ── NOTE ── */
+.note {
+  background: rgba(232,197,71,.05);
+  border-right: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 11px 15px;
+  margin: 1rem 0;
+  font-size: 13.5px;
+  color: #c9c3a8;
+  line-height: 1.7;
+}
+.note.blue { background: rgba(78,205,196,.05); border-right-color: var(--teal); color: #b0d8d5; }
+.note.red  { background: rgba(255,107,107,.05); border-right-color: var(--red); color: #d8b0b0; }
+.note strong { color: var(--accent); }
+.note.blue strong { color: var(--teal); }
+.note.red strong  { color: var(--red); }
+
+/* ── FORMULA ── */
+.formula {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 9px 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: #c8d0e0;
+  direction: ltr;
+  text-align: left;
+  margin: 8px 0;
+}
+.fy { color: var(--accent); }
+.ft { color: var(--teal); }
+.fr { color: var(--red); }
+.fp2 { color: var(--purple); }
+
+/* ── CARDS ── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 1.25rem 0;
+}
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 1.1rem;
+  transition: border-color .2s;
+}
+.card:hover { border-color: rgba(232,197,71,.3); }
+.card .icon { font-size: 18px; margin-bottom: 6px; }
+.card .cname { font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.card .cdesc { font-size: 12.5px; color: var(--dim); line-height: 1.65; }
+
+/* ── STEPS ── */
+.step { display: flex; gap: 1rem; margin-bottom: 1.1rem; align-items: flex-start; }
+.step-n {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(232,197,71,.1);
+  border: 1px solid rgba(232,197,71,.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 10px; color: var(--accent);
+  margin-top: 3px;
+}
+.step-t { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+.step-d { font-size: 13px; color: var(--dim); line-height: 1.65; }
+
+/* ── TABLE ── */
+.tbl-wrap { overflow-x: auto; margin: 1.25rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--bg3); }
+th { padding: 9px 13px; text-align: right; color: var(--dim); font-weight: 500; font-size: 11px; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
+td { padding: 9px 13px; border-bottom: 1px solid rgba(255,255,255,.04); color: #c2bfcc; }
+tr:hover td { background: rgba(255,255,255,.02); }
+td.mono { font-family: var(--mono); font-size: 11.5px; direction: ltr; text-align: left; }
+td.hi { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+td.green { color: var(--green); font-family: var(--mono); }
+
+/* ── METRICS ── */
+.metric-list { margin: 1.5rem 0; display: flex; flex-direction: column; gap: 13px; }
+.metric-item { display: flex; align-items: center; gap: 12px; }
+.metric-lbl { font-family: var(--mono); font-size: 11px; color: var(--muted); width: 90px; flex-shrink: 0; text-align: left; direction: ltr; }
+.metric-track { flex: 1; background: var(--bg3); border-radius: 3px; height: 5px; overflow: hidden; }
+.metric-fill { height: 100%; border-radius: 3px; }
+.metric-pct { font-family: var(--mono); font-size: 12px; font-weight: 500; width: 50px; flex-shrink: 0; text-align: left; direction: ltr; }
+
+/* ── CONFUSION MATRIX ── */
+.cm-grid {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr;
+  gap: 6px;
+  max-width: 500px;
+  margin: 1.25rem 0;
+  direction: ltr;
+}
+.cm-head { font-family: var(--mono); font-size: 10px; color: var(--muted); text-align: center; padding: 4px; display: flex; align-items: center; justify-content: center; }
+.cm-row-lbl { font-family: var(--mono); font-size: 10px; color: var(--muted); display: flex; align-items: center; justify-content: flex-end; padding-left: 6px; }
+.cm-cell { border-radius: 9px; padding: 14px 10px; text-align: center; }
+.cm-val { font-size: 20px; font-weight: 700; display: block; font-family: 'IBM Plex Mono', monospace; }
+.cm-name { font-family: var(--mono); font-size: 10px; display: block; margin-top: 3px; opacity: .8; }
+.cm-desc { font-size: 11px; display: block; margin-top: 2px; opacity: .65; }
+.tp, .tn { background: rgba(74,222,128,.07); border: 1px solid rgba(74,222,128,.18); }
+.tp .cm-val, .tn .cm-val { color: var(--green); }
+.tp .cm-name, .tn .cm-name { color: var(--green); }
+.fp-c { background: rgba(255,107,107,.07); border: 1px solid rgba(255,107,107,.18); }
+.fp-c .cm-val { color: var(--red); }
+.fp-c .cm-name { color: var(--red); }
+.fn-c { background: rgba(232,197,71,.07); border: 1px solid rgba(232,197,71,.18); }
+.fn-c .cm-val { color: var(--accent); }
+.fn-c .cm-name { color: var(--accent); }
+
+/* ── SVG FIGURE ── */
+.fig { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin: 1.5rem 0; }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+@media (max-width: 860px) {
+  aside { display: none; }
+  main { margin-right: 0; }
+  .hero, .content { padding: 2rem 1.25rem; }
+  .pipeline { padding: 1.25rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside>
+  <div class="sb-logo">
+    <span class="sb-tag">AI Lab 7</span>
+    <div class="sb-title">شرح المشروع الكامل<br>تصنيف الدخل</div>
+  </div>
+
+  <div class="nav-group">
+    <span class="nav-group-lbl">المفهوم</span>
+    <a href="#ml" class="nav-a"><span class="nav-dot"></span>ما هو Machine Learning؟</a>
+    <a href="#goal" class="nav-a"><span class="nav-dot"></span>هدف المشروع</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-lbl">ملف 1</span>
+    <a href="#preproc" class="nav-a"><span class="nav-dot"></span>preprocessing.py</a>
+    <a href="#clean" class="nav-a"><span class="nav-dot"></span>→ clean()</a>
+    <a href="#outliers" class="nav-a"><span class="nav-dot"></span>→ detect_outliers()</a>
+    <a href="#encoding" class="nav-a"><span class="nav-dot"></span>→ Encoding</a>
+    <a href="#scaling" class="nav-a"><span class="nav-dot"></span>→ Scaling</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-lbl">ملف 2</span>
+    <a href="#svm" class="nav-a"><span class="nav-dot"></span>SVM — ما هو؟</a>
+    <a href="#svm-code" class="nav-a"><span class="nav-dot"></span>→ الكود</a>
+    <a href="#metrics" class="nav-a"><span class="nav-dot"></span>→ Metrics والنتائج</a>
+    <a href="#cm" class="nav-a"><span class="nav-dot"></span>→ Confusion Matrix</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-lbl">ملف 3</span>
+    <a href="#logistic" class="nav-a"><span class="nav-dot"></span>Logistic Regression</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-lbl">ملف 4</span>
+    <a href="#dt" class="nav-a"><span class="nav-dot"></span>Decision Tree</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-lbl">ملف 5</span>
+    <a href="#predictor" class="nav-a"><span class="nav-dot"></span>predictor.py</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-lbl">الخلاصة</span>
+    <a href="#compare" class="nav-a"><span class="nav-dot"></span>مقارنة الـ Models</a>
+    <a href="#conclusion" class="nav-a"><span class="nav-dot"></span>الخلاصة النهائية</a>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <span class="hero-tag">AI Lab 7 — Income Classification Project</span>
+  <h1>شرح <span>كامل</span> للمشروع<br>من الأول للآخر</h1>
+  <p class="hero-sub">كل ملف، كل function، كل concept — مشروح بالتفصيل بالعربي مع الـ terms بالإنجليزي</p>
+  <div class="pills">
+    <span class="pill y">Python</span>
+    <span class="pill t">scikit-learn</span>
+    <span class="pill r">SVM</span>
+    <span class="pill p">Decision Tree</span>
+    <span class="pill">Logistic Regression</span>
+    <span class="pill">5 ملفات</span>
+    <span class="pill">~48K صف</span>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div class="pipeline">
+  <div class="pipe-node"><a href="#preproc">preprocessing.py</a><span class="pipe-lbl">Step 1 — تنظيف</span></div>
+  <div class="pipe-arr">→</div>
+  <div class="pipe-node"><a href="#svm">train_models.py</a><span class="pipe-lbl">Step 2 — SVM</span></div>
+  <div class="pipe-arr">→</div>
+  <div class="pipe-node"><a href="#logistic">logistic.py</a><span class="pipe-lbl">Step 2b</span></div>
+  <div class="pipe-arr">→</div>
+  <div class="pipe-node"><a href="#dt">decision_tree.py</a><span class="pipe-lbl">Step 2c</span></div>
+  <div class="pipe-arr">→</div>
+  <div class="pipe-node"><a href="#predictor">predictor.py</a><span class="pipe-lbl">Step 3 — تنبؤ</span></div>
+</div>
+
+<div class="content">
+
+<!-- ══════════════════════════════
+     ML CONCEPT
+══════════════════════════════ -->
+<section id="ml">
+  <div class="sec-eye">// 00 — المفهوم</div>
+  <h2 class="sec">ما هو Machine Learning؟</h2>
+  <p>الـ Machine Learning هو طريقة تعليم الكمبيوتر يلاقي <strong>patterns في الداتا</strong> من غير ما تكتبله قواعد صريحة. بدل ما تقوله "لو العمر أكبر من 40 والتعليم عالي يبقى الدخل &gt;50K" — بتديله آلاف الأمثلة ويتعلم لوحده.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="icon">🗄️</div>
+      <div class="cname">Training Data</div>
+      <div class="cdesc">أمثلة تاريخية بإجاباتها — الـ model بيتعلم منها.</div>
+    </div>
+    <div class="card">
+      <div class="icon">🧠</div>
+      <div class="cname">Model</div>
+      <div class="cdesc">الخوارزمية اللي بتلاقي الـ patterns. في المشروع ده: SVM، Logistic Regression، Decision Tree.</div>
+    </div>
+    <div class="card">
+      <div class="icon">🎯</div>
+      <div class="cname">Prediction</div>
+      <div class="cdesc">بعد التدريب، لما تديه data جديدة، بيتنبأ بالإجابة.</div>
+    </div>
+    <div class="card">
+      <div class="icon">📏</div>
+      <div class="cname">Evaluation</div>
+      <div class="cdesc">بنقيس أداء الـ model بـ Accuracy و Precision و Recall و F1-Score.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════
+     PROJECT GOAL
+══════════════════════════════ -->
+<section id="goal">
+  <div class="sec-eye">// 01 — المشروع</div>
+  <h2 class="sec">هدف المشروع</h2>
+  <p>بناءً على معلومات عن شخص — عمره، تعليمه، مهنته، ساعات شغله — نتنبأ هل دخله <strong>≤50K أم &gt;50K</strong>.</p>
+  <p>ده بيتسمى <strong>Binary Classification</strong> — كل prediction هي واحدة من إجابتين بس.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>الـ Feature</th><th>مثال</th><th>النوع</th></tr></thead>
+      <tbody>
+        <tr><td>age</td><td class="mono">39</td><td>Numeric</td></tr>
+        <tr><td>workclass</td><td class="mono">State-gov</td><td>Categorical</td></tr>
+        <tr><td>education</td><td class="mono">Bachelors</td><td>Categorical</td></tr>
+        <tr><td>occupation</td><td class="mono">Adm-clerical</td><td>Categorical</td></tr>
+        <tr><td>sex</td><td class="mono">Male</td><td>Binary</td></tr>
+        <tr><td>capital-gain</td><td class="mono">2174</td><td>Numeric</td></tr>
+        <tr><td>hours-per-week</td><td class="mono">40</td><td>Numeric</td></tr>
+        <tr><td><strong>Income (Target)</strong></td><td class="mono hi">≤50K or &gt;50K</td><td>اللي بنتنبأ بيه</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note blue">
+    <strong>بعد الـ preprocessing:</strong> الـ 14 عمود الأصلية بتتحول لـ 108 عمود — لأن الـ One-Hot Encoding بتعمل عمود binary لكل قيمة في كل عمود categorical.
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════
+     PREPROCESSING
+══════════════════════════════ -->
+<section id="preproc">
+  <div class="sec-eye">// 02 — ملف 1</div>
+  <h2 class="sec">preprocessing.py</h2>
+  <p>ده <strong>أول ملف بيشتغل</strong>. شغلته إنه ياخد الـ CSV files الخام ويحولها لداتا نظيفة رقمية تقدر الـ models تشتغل عليها، وبعدين يحفظها في CSV files جديدة.</p>
+
+  <div class="note blue">
+    <strong>ليه Preprocessing ضروري؟</strong> الـ ML models بتفهم أرقام بس. نصوص زي "Male" و"Private" لازم تتحول. كمان أرقام كبيرة زي fnlwgt (~300,000) هتطغى على أرقام صغيرة زي age (~40) — الـ Scaling بيحل ده.
+  </div>
+</section>
+
+<section id="clean">
+  <h3 class="sub">→ clean(df)</h3>
+  <div class="code-wrap">
+    <div class="code-bar"><div style="display:flex;align-items:center;gap:10px"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-fname">preprocessing.py</span></div><span class="code-lang">python</span></div>
+    <pre><span class="kw">def</span> <span class="fn">clean</span>(<span class="var">df</span>):
+    <span class="var">df</span>.<span class="var">columns</span> = <span class="var">df</span>.<span class="var">columns</span>.<span class="fn">str</span>.<span class="fn">strip</span>()
+    <span class="kw">for</span> <span class="var">col</span> <span class="kw">in</span> <span class="var">df</span>.<span class="fn">select_dtypes</span>(<span class="var">include</span>=<span class="str">"object"</span>).<span class="var">columns</span>:
+        <span class="var">df</span>[<span class="var">col</span>] = <span class="var">df</span>[<span class="var">col</span>].<span class="fn">str</span>.<span class="fn">strip</span>().<span class="fn">str</span>.<span class="fn">rstrip</span>(<span class="str">"."</span>)
+    <span class="kw">return</span> <span class="var">df</span></pre>
+  </div>
+  <p><strong>بتعمل إيه:</strong> بتشيل الـ spaces الزيادة من أسماء الأعمدة ومن قيم الـ strings، وبتشيل النقط من آخر القيم.</p>
+  <p><strong>ليه مهمة:</strong> من غيرها، <code>"Male"</code> و <code>" Male"</code> هيبقوا قيمتين مختلفتين في نظر الـ encoder ويفشل على الـ test data.</p>
+</section>
+
+<section id="outliers">
+  <h3 class="sub">→ detect_outliers(column, df)</h3>
+  <div class="code-wrap">
+    <div class="code-bar"><div style="display:flex;align-items:center;gap:10px"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-fname">preprocessing.py</span></div><span class="code-lang">python</span></div>
+    <pre><span class="kw">def</span> <span class="fn">detect_outliers</span>(<span class="var">column</span>, <span class="var">df</span>):
+    <span class="var">Q1</span> = <span class="var">df</span>[<span class="var">column</span>].<span class="fn">quantile</span>(<span class="num">0.25</span>)
+    <span class="var">Q3</span> = <span class="var">df</span>[<span class="var">column</span>].<span class="fn">quantile</span>(<span class="num">0.75</span>)
+    <span class="var">IQR</span> = <span class="var">Q3</span> <span class="op">-</span> <span class="var">Q1</span>
+    <span class="var">lower_bound</span> = <span class="var">Q1</span> <span class="op">-</span> <span class="num">1.5</span> <span class="op">*</span> <span class="var">IQR</span>
+    <span class="var">upper_bound</span> = <span class="var">Q3</span> <span class="op">+</span> <span class="num">1.5</span> <span class="op">*</span> <span class="var">IQR</span>
+    <span class="var">df</span>[<span class="var">column</span>] = <span class="var">df</span>[<span class="var">column</span>].<span class="fn">clip</span>(<span class="var">lower</span>=<span class="var">lower_bound</span>, <span class="var">upper</span>=<span class="var">upper_bound</span>)</pre>
+  </div>
+
+  <p>الـ <strong>Outlier</strong> هو قيمة متطرفة بعيدة عن الباقين — زي حد عنده capital-gain بـ 99,999 وباقي الناس عندهم 0. القيم دي بتأثر بشكل كبير على الـ model.</p>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body">
+      <div class="step-t">حساب Q1 و Q3</div>
+      <div class="step-d">Q1 = الـ 25th percentile (ربع الداتا السفلاني)، Q3 = الـ 75th percentile (ربع الداتا الفوقاني). الـ IQR = Q3 − Q1 = منتصف 50% من الداتا.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body">
+      <div class="step-t">تحديد الـ bounds</div>
+      <div class="step-d">Lower bound = Q1 − 1.5×IQR. Upper bound = Q3 + 1.5×IQR. أي قيمة برا الحدود دي هي outlier.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-n">3</div>
+    <div class="step-body">
+      <div class="step-t">Clip — مش Delete</div>
+      <div class="step-d">الـ <code>clip()</code> بتبدل الـ outliers بقيمة الحد بدل ما تحذف الصف كله. ده بيحافظ على حجم الداتا وبيشيل تأثير القيم المتطرفة.</div>
+    </div>
+  </div>
+  <p>متطبق على: <code>age, fnlwgt, education-num, capital-gain, capital-loss, hours-per-week</code></p>
+</section>
+
+<section id="encoding">
+  <h3 class="sub">→ Encoding — تحويل النصوص لأرقام</h3>
+  <p>الـ models مش بتفهم نصوص. عندنا طريقتين حسب نوع العمود:</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="icon">🏷️</div>
+      <div class="cname">Label Encoding</div>
+      <div class="cdesc">للأعمدة الـ binary — sex و Income. بتحول قيمتين لـ 0 و 1. آمن هنا لأن مفيش علاقة رياضية غلط بين قيمتين بس.</div>
+    </div>
+    <div class="card">
+      <div class="icon">🔢</div>
+      <div class="cname">One-Hot Encoding</div>
+      <div class="cdesc">للأعمدة اللي فيها أكتر من قيمتين زي workclass و education و occupation. بتعمل عمود binary منفصل لكل قيمة.</div>
+    </div>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-bar"><div style="display:flex;align-items:center;gap:10px"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-fname">preprocessing.py — Label Encoding</span></div><span class="code-lang">python</span></div>
+    <pre><span class="cm"># Train — fit_transform: يتعلم ويطبق</span>
+<span class="var">processed_data</span>[<span class="str">"sex"</span>]    = <span class="fn">labeldata</span>(<span class="str">"sex"</span>, <span class="var">processed_data</span>)
+<span class="var">processed_data</span>[<span class="str">"Income"</span>] = <span class="fn">labeldata</span>(<span class="str">"Income"</span>, <span class="var">processed_data</span>)
+<span class="cm"># Female=0, Male=1   |   <=50K=0, >50K=1</span>
+
+<span class="cm"># Test — transform فقط، مش fit_transform</span>
+<span class="var">processed_data_test</span>[<span class="str">"sex"</span>]    = <span class="fn">labeldatatest</span>(<span class="str">"sex"</span>, <span class="var">processed_data_test</span>)
+<span class="var">processed_data_test</span>[<span class="str">"Income"</span>] = <span class="fn">labeldatatest</span>(<span class="str">"Income"</span>, <span class="var">processed_data_test</span>)</pre>
+  </div>
+
+  <div class="note red">
+    <strong>قاعدة مهمة جداً:</strong> على الـ test data دايمًا نستخدم <code>transform()</code> بس — مش <code>fit_transform()</code>. لو عملنا fit تاني على الـ test data، الـ mapping ممكن يختلف ونكسر الـ consistency.
+  </div>
+
+  <p>مثال على الـ One-Hot Encoding — عمود workclass فيه قيم زي Private، Self-emp، Gov:</p>
+  <div class="output">
+<span class="ol">الأصل:   </span><span class="ov">workclass = "Private"</span>
+<span class="ol">بعد OHE: </span><span class="ov">workclass_Private=1, workclass_Self-emp=0, workclass_Gov=0, ...</span>
+  </div>
+  <p>ده بيحل مشكلة إن الـ model ميفكرش إن "Self-emp (2) ضعف قيمة Private (1)" — علاقة رياضية كاذبة ماكناش قصدناها.</p>
+</section>
+
+<section id="scaling">
+  <h3 class="sub">→ MinMax Scaling</h3>
+  <div class="code-wrap">
+    <div class="code-bar"><div style="display:flex;align-items:center;gap:10px"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-fname">preprocessing.py</span></div><span class="code-lang">python</span></div>
+    <pre><span class="var">scale</span> = <span class="cls">MinMaxScaler</span>()
+<span class="cm"># Train: fit_transform — يتعلم الـ min وmax ويطبق</span>
+<span class="var">processed_data</span>[[<span class="str">"age"</span>, <span class="str">"fnlwgt"</span>, ...]] = <span class="var">scale</span>.<span class="fn">fit_transform</span>(<span class="var">processed_data</span>[[...]])
+<span class="cm"># Test: transform فقط — يستخدم min وmax اللي اتعلمهم من التدريب</span>
+<span class="var">processed_data_test</span>[[<span class="str">"age"</span>, <span class="str">"fnlwgt"</span>, ...]] = <span class="var">scale</span>.<span class="fn">transform</span>(<span class="var">processed_data_test</span>[[...]])</pre>
+  </div>
+  <div class="formula">scaled_value = <span class="fy">(x − min)</span> / <span class="ft">(max − min)</span>   →   النتيجة دايمًا بين 0 و 1</div>
+  <p>من غير الـ Scaling، <code>fnlwgt</code> (~300,000) كانت هتطغى على <code>age</code> (~40) و <code>education-num</code> (~9) في حسابات الـ model، وده كان هيخلي الـ features دي عديمة التأثير فعلياً.</p>
+  <p>في الآخر، الـ encoders والـ OneHotEncoder والـ scaler كلهم بيتحفظوا بـ <code>joblib</code> عشان الـ predictor يستخدمهم من غير ما يعيد الـ preprocessing.</p>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════
+     SVM
+══════════════════════════════ -->
+<section id="svm">
+  <div class="sec-eye">// 03 — ملف 2</div>
+  <h2 class="sec">SVM — ما هو وبيشتغل إزاي؟</h2>
+  <p>الـ <strong>Support Vector Machine</strong> هو خوارزمية بترسم <strong>خط فاصل</strong> (Decision Boundary) بين الـ classes بأكبر مسافة ممكنة. المسافة دي اسمها <strong>Margin</strong>. في الداتا بتاعتنا (107 dimensions) الخط ده بيبقى hyperplane مش خط عادي.</p>
+
+  <div class="fig">
+    <svg width="100%" viewBox="0 0 660 270" xmlns="http://www.w3.org/2000/svg">
+      <rect width="660" height="270" fill="#18181c" rx="8"/>
+      <rect x="248" y="10" width="164" height="250" fill="#e8c547" opacity="0.04" rx="4"/>
+      <line x1="330" y1="10" x2="330" y2="260" stroke="#e8c547" stroke-width="2" stroke-dasharray="8,4"/>
+      <line x1="252" y1="10" x2="252" y2="260" stroke="#e8c547" stroke-width="1" stroke-dasharray="3,4" opacity="0.35"/>
+      <line x1="408" y1="10" x2="408" y2="260" stroke="#e8c547" stroke-width="1" stroke-dasharray="3,4" opacity="0.35"/>
+      <line x1="256" y1="135" x2="404" y2="135" stroke="#6b6875" stroke-width="1"/>
+      <text x="330" y="129" text-anchor="middle" fill="#6b6875" font-family="IBM Plex Mono" font-size="10">← Margin →</text>
+      <circle cx="75"  cy="55"  r="8" fill="#4ecdc4" opacity=".85"/>
+      <circle cx="48"  cy="118" r="8" fill="#4ecdc4" opacity=".85"/>
+      <circle cx="115" cy="188" r="8" fill="#4ecdc4" opacity=".85"/>
+      <circle cx="88"  cy="242" r="8" fill="#4ecdc4" opacity=".85"/>
+      <circle cx="158" cy="85"  r="8" fill="#4ecdc4" opacity=".85"/>
+      <circle cx="140" cy="222" r="8" fill="#4ecdc4" opacity=".85"/>
+      <circle cx="240" cy="158" r="8" fill="#4ecdc4" stroke="#4ecdc4" stroke-width="2.5"/>
+      <circle cx="242" cy="88"  r="8" fill="#4ecdc4" stroke="#4ecdc4" stroke-width="2.5"/>
+      <text x="72" y="262" text-anchor="middle" fill="#4ecdc4" font-family="IBM Plex Mono" font-size="10">≤50K</text>
+      <circle cx="528" cy="65"  r="8" fill="#ff6b6b" opacity=".85"/>
+      <circle cx="575" cy="135" r="8" fill="#ff6b6b" opacity=".85"/>
+      <circle cx="515" cy="205" r="8" fill="#ff6b6b" opacity=".85"/>
+      <circle cx="600" cy="50"  r="8" fill="#ff6b6b" opacity=".85"/>
+      <circle cx="558" cy="242" r="8" fill="#ff6b6b" opacity=".85"/>
+      <circle cx="630" cy="168" r="8" fill="#ff6b6b" opacity=".85"/>
+      <circle cx="420" cy="148" r="8" fill="#ff6b6b" stroke="#ff6b6b" stroke-width="2.5"/>
+      <circle cx="422" cy="208" r="8" fill="#ff6b6b" stroke="#ff6b6b" stroke-width="2.5"/>
+      <text x="562" y="262" text-anchor="middle" fill="#ff6b6b" font-family="IBM Plex Mono" font-size="10">&gt;50K</text>
+      <text x="330" y="22" text-anchor="middle" fill="#e8c547" font-family="IBM Plex Mono" font-size="10" opacity=".8">Decision Boundary</text>
+      <text x="206" y="158" text-anchor="end" fill="#6b6875" font-family="IBM Plex Mono" font-size="9">Support Vectors</text>
+      <line x1="208" y1="158" x2="229" y2="158" stroke="#6b6875" stroke-width=".8"/>
+      <text x="446" y="148" fill="#6b6875" font-family="IBM Plex Mono" font-size="9">Support Vectors</text>
+      <line x1="444" y1="148" x2="430" y2="148" stroke="#6b6875" stroke-width=".8"/>
+    </svg>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="cname" style="color:var(--accent)">Decision Boundary</div>
+      <div class="cdesc">الخط (أو الـ hyperplane في أبعاد أعلى) اللي بيفصل الـ classes. كل prediction بتتحدد من أي جانب من الخط ده الشخص.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--teal)">Margin</div>
+      <div class="cdesc">المسافة بين الـ boundary والأقرب نقطة من كل class. الـ SVM بيحاول يكبّر الـ margin ده عشان الـ model يبقى أفضل على داتا جديدة.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--purple)">Support Vectors</div>
+      <div class="cdesc">النقط اللي على حافة الـ Margin. دول بس اللي بيحددوا الخط الفاصل — باقي النقط مش مهمة.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--red)">RBF Kernel</div>
+      <div class="cdesc">في الداتا الحقيقية الـ classes مش دايمًا منفصلة بخط مستقيم. الـ RBF بيحول الداتا عشان يقدر يفصل بـ حدود منحنية.</div>
+    </div>
+  </div>
+</section>
+
+<section id="svm-code">
+  <h3 class="sub">→ الكود خطوة بخطوة</h3>
+  <div class="code-wrap">
+    <div class="code-bar"><div style="display:flex;align-items:center;gap:10px"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-fname">train_models.py</span></div><span class="code-lang">python</span></div>
+    <pre><span class="kw">import</span> <span class="var">pandas</span> <span class="kw">as</span> <span class="var">pd</span>
+<span class="kw">import</span> <span class="var">pickle</span>
+<span class="kw">from</span> <span class="var">sklearn.svm</span> <span class="kw">import</span> <span class="cls">SVC</span>
+<span class="kw">from</span> <span class="var">sklearn.metrics</span> <span class="kw">import</span> <span class="fn">accuracy_score</span>, <span class="fn">precision_score</span>,
+                             <span class="fn">recall_score</span>, <span class="fn">f1_score</span>, <span class="fn">confusion_matrix</span>
+
+<span class="cm"># تحميل الداتا اللي اتعملها preprocessing</span>
+<span class="var">train</span> = <span class="var">pd</span>.<span class="fn">read_csv</span>(<span class="str">"Preprocessing/processed_train_data.csv"</span>)
+<span class="var">test</span>  = <span class="var">pd</span>.<span class="fn">read_csv</span>(<span class="str">"Preprocessing/processed_test_data.csv"</span>)
+
+<span class="cm"># X = الـ features (107 عمود)، y = الـ target (0 أو 1)</span>
+<span class="var">X_train</span> = <span class="var">train</span>.<span class="fn">drop</span>(<span class="var">columns</span>=[<span class="str">"Income"</span>])
+<span class="var">y_train</span> = <span class="var">train</span>[<span class="str">"Income"</span>]
+<span class="var">X_test</span>  = <span class="var">test</span>.<span class="fn">drop</span>(<span class="var">columns</span>=[<span class="str">"Income"</span>])
+<span class="var">y_test</span>  = <span class="var">test</span>[<span class="str">"Income"</span>]
+
+<span class="cm"># بناء الـ model بالـ hyperparameters</span>
+<span class="var">svm</span> = <span class="cls">SVC</span>(<span class="var">kernel</span>=<span class="str">'rbf'</span>, <span class="var">C</span>=<span class="num">1</span>)
+
+<span class="cm"># التدريب — بيلاقي الـ decision boundary الأمثل</span>
+<span class="var">svm</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+
+<span class="cm"># التنبؤ — بيصنف كل شخص في الـ test set</span>
+<span class="var">svm_pred</span> = <span class="var">svm</span>.<span class="fn">predict</span>(<span class="var">X_test</span>)
+
+<span class="cm"># حفظ الـ model</span>
+<span class="var">pickle</span>.<span class="fn">dump</span>(<span class="var">svm</span>, <span class="fn">open</span>(<span class="str">'SVMmodel.pkl'</span>, <span class="str">'wb'</span>))</pre>
+  </div>
+
+  <p><strong>X و y:</strong> الـ X هي الـ features — كل الأعمدة ما عدا Income. الـ y هي الـ target — عمود Income بس، فيه 0 (≤50K) أو 1 (&gt;50K). ده الـ encoding اللي عمله preprocessing.py.</p>
+  <p><strong>kernel='rbf':</strong> بيحدد شكل الـ decision boundary. الـ RBF بيخليه منحني مش مستقيم — أحسن للداتا المعقدة.</p>
+  <p><strong>C=1:</strong> الـ regularization hyperparameter. C عالي = الـ model بيحاول يصنف كل نقطة تدريب صح بس ممكن يعمل overfitting. C منخفض = أبسط لكن بيقبل بعض الأخطاء.</p>
+  <p><strong>fit():</strong> التدريب الفعلي. الـ model بيحلل الـ 32K صف و107 عمود يلاقي الـ hyperplane الأمثل. بياخد دقايق.</p>
+  <p><strong>predict():</strong> كل شخص في الـ test بيتحط في الـ 107-dimensional space. الـ model بيشوف هو على أنهي جانب من الـ boundary ويرجع 0 أو 1.</p>
+  <p><strong>pickle.dump():</strong> بيحفظ الـ model في ملف <code>.pkl</code> عشان نستخدمه بعدين من غير ما نعيد التدريب.</p>
+</section>
+
+<section id="metrics">
+  <div class="sec-eye">// الـ Metrics</div>
+  <h3 class="sub">→ النتائج والـ Metrics</h3>
+
+  <div class="output">
+<span class="ol">=== SVM ===</span>
+<span class="ol">Accuracy : </span><span class="ov">0.8373679036618333</span>
+<span class="ol">Precision: </span><span class="ov">0.7015126050420168</span>
+<span class="ol">Recall   : </span><span class="ow">0.5426417056682268</span>
+<span class="ol">F1-Score : </span><span class="ov">0.6119337340565899</span>
+  </div>
+
+  <div class="metric-list">
+    <div class="metric-item">
+      <span class="metric-lbl">Accuracy</span>
+      <div class="metric-track"><div class="metric-fill" style="width:83.7%;background:var(--teal)"></div></div>
+      <span class="metric-pct" style="color:var(--teal)">83.7%</span>
+    </div>
+    <div class="metric-item">
+      <span class="metric-lbl">Precision</span>
+      <div class="metric-track"><div class="metric-fill" style="width:70.2%;background:var(--purple)"></div></div>
+      <span class="metric-pct" style="color:var(--purple)">70.2%</span>
+    </div>
+    <div class="metric-item">
+      <span class="metric-lbl">Recall</span>
+      <div class="metric-track"><div class="metric-fill" style="width:54.3%;background:var(--red)"></div></div>
+      <span class="metric-pct" style="color:var(--red)">54.3%</span>
+    </div>
+    <div class="metric-item">
+      <span class="metric-lbl">F1-Score</span>
+      <div class="metric-track"><div class="metric-fill" style="width:61.2%;background:var(--accent)"></div></div>
+      <span class="metric-pct" style="color:var(--accent)">61.2%</span>
+    </div>
+  </div>
+
+  <p><strong>Accuracy — 83.7%:</strong> كام بالمية من كل الـ predictions كانت صح. بتحسب (TN+TP) / الكل. يبدو كويس بس ممكن يكدب لو في class imbalance.</p>
+  <p><strong>Precision — 70.2%:</strong> لما الـ model قال &gt;50K، كان صح كام مرة؟ TP / (TP+FP) = 2087 / 2975. يعني من كل 10 قالهم &gt;50K، 7 منهم صح.</p>
+  <p><strong>Recall — 54.3%:</strong> من كل الناس اللي دخلها فعلاً &gt;50K، الـ model اكتشف كام منهم؟ TP / (TP+FN) = 2087 / 3846. ده أضعف metric — نص الـ &gt;50K اتفاتوا على الـ model.</p>
+  <p><strong>F1-Score — 61.2%:</strong> الـ Harmonic Mean بين الـ Precision والـ Recall. بيستخدم harmonic مش متوسط عادي عشان لو أي واحد منهم وطي جداً يأثر بشكل كبير.</p>
+  <div class="formula">F1 = 2 × <span class="fy">Precision</span> × <span class="ft">Recall</span> / (<span class="fy">P</span> + <span class="ft">R</span>) = 2 × 0.702 × 0.543 / 1.245 = <span class="ft">61.2%</span></div>
+</section>
+
+<section id="cm">
+  <h3 class="sub">→ Confusion Matrix — أم الـ Metrics</h3>
+  <p>جدول 2×2 بيوضح كل الحالات الممكنة للـ model — صح وغلط بالتفصيل. كل الـ metrics بتتحسب من الأرقام الأربعة دول.</p>
+
+  <div class="output">
+<span class="ol">Confusion Matrix:</span>
+<span class="og">[[11542   888]</span>
+<span class="og"> [ 1759  2087]]</span>
+  </div>
+
+  <div class="cm-grid">
+    <div class="cm-head"></div>
+    <div class="cm-head">Predicted ≤50K</div>
+    <div class="cm-head">Predicted &gt;50K</div>
+    <div class="cm-row-lbl">Actual ≤50K</div>
+    <div class="cm-cell tn">
+      <span class="cm-val">11,542</span>
+      <span class="cm-name">True Negative (TN)</span>
+      <span class="cm-desc">قال ≤50K وصح ✓</span>
+    </div>
+    <div class="cm-cell fp-c">
+      <span class="cm-val">888</span>
+      <span class="cm-name">False Positive (FP)</span>
+      <span class="cm-desc">قال &gt;50K غلط ✗</span>
+    </div>
+    <div class="cm-row-lbl">Actual &gt;50K</div>
+    <div class="cm-cell fn-c">
+      <span class="cm-val">1,759</span>
+      <span class="cm-name">False Negative (FN)</span>
+      <span class="cm-desc">فاته وقال ≤50K ✗</span>
+    </div>
+    <div class="cm-cell tp">
+      <span class="cm-val">2,087</span>
+      <span class="cm-name">True Positive (TP)</span>
+      <span class="cm-desc">قال &gt;50K وصح ✓</span>
+    </div>
+  </div>
+
+  <div class="formula">
+Accuracy  = (<span class="ft">TN</span> + <span class="fy">TP</span>) / الكل     = (11542 + 2087) / 16276 = <span class="ft">83.7%</span>
+Precision = <span class="fy">TP</span> / (<span class="fy">TP</span> + <span class="fr">FP</span>)   = 2087 / (2087 + 888)   = <span class="fp2">70.2%</span>
+Recall    = <span class="fy">TP</span> / (<span class="fy">TP</span> + <span class="fr">FN</span>)   = 2087 / (2087 + 1759)  = <span class="fr">54.3%</span>
+  </div>
+
+  <div class="note red">
+    <strong>أكبر مشكلة:</strong> الـ 1,759 False Negatives — ناس دخلها فعلاً &gt;50K بس الـ model قالهم ≤50K. السبب هو الـ <strong>Class Imbalance</strong>: ~75% من الداتا ≤50K فالـ model اتحيّز ناحيتهم. الحل: إضافة <code>class_weight='balanced'</code>.
+  </div>
+
+  <div class="note">
+    <strong>طريقة سريعة لقراءتها:</strong> الأرقام على الـ diagonal (القطر) = صح ✓ — الأرقام برا الـ diagonal = غلط ✗
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════
+     LOGISTIC REGRESSION
+══════════════════════════════ -->
+<section id="logistic">
+  <div class="sec-eye">// 04 — ملف 3</div>
+  <h2 class="sec">Logistic Regression</h2>
+  <p>على الرغم من اسمه، الـ Logistic Regression هو <strong>classification model</strong> مش regression. بيحسب <strong>الاحتمالية</strong> إن الشخص ده في class 1 (&gt;50K)، وبعدين بيستخدم threshold (عادة 0.5) عشان يقرر.</p>
+
+  <div class="fig">
+    <svg width="100%" viewBox="0 0 560 190" xmlns="http://www.w3.org/2000/svg">
+      <rect width="560" height="190" fill="#18181c" rx="8"/>
+      <line x1="60" y1="160" x2="500" y2="160" stroke="#2a2a32" stroke-width="1"/>
+      <line x1="60" y1="15" x2="60" y2="160" stroke="#2a2a32" stroke-width="1"/>
+      <path d="M68,153 C88,151 100,149 120,142 C148,128 168,105 196,86 C224,67 254,52 282,45 C310,39 338,37 366,35 C394,34 422,33 495,32" fill="none" stroke="#e8c547" stroke-width="2.5"/>
+      <line x1="60" y1="93" x2="500" y2="93" stroke="#4ecdc4" stroke-width="1" stroke-dasharray="5,4" opacity=".6"/>
+      <text x="505" y="97" fill="#4ecdc4" font-family="IBM Plex Mono" font-size="8">0.5 threshold</text>
+      <text x="54" y="164" text-anchor="end" fill="#6b6875" font-family="IBM Plex Mono" font-size="8">0</text>
+      <text x="54" y="97"  text-anchor="end" fill="#6b6875" font-family="IBM Plex Mono" font-size="8">0.5</text>
+      <text x="54" y="22"  text-anchor="end" fill="#6b6875" font-family="IBM Plex Mono" font-size="8">1.0</text>
+      <text x="280" y="182" text-anchor="middle" fill="#6b6875" font-family="IBM Plex Mono" font-size="8">← weighted sum of features →</text>
+      <text x="30" y="90" text-anchor="middle" fill="#6b6875" font-family="IBM Plex Mono" font-size="8" transform="rotate(-90,30,90)">P(&gt;50K)</text>
+      <text x="170" y="148" text-anchor="middle" fill="#4ecdc4" font-family="IBM Plex Mono" font-size="8" opacity=".7">predict ≤50K</text>
+      <text x="430" y="45"  text-anchor="middle" fill="#ff6b6b" font-family="IBM Plex Mono" font-size="8" opacity=".7">predict &gt;50K</text>
+      <text x="280" y="12" text-anchor="middle" fill="#e8c547" font-family="IBM Plex Mono" font-size="9">Sigmoid Curve</text>
+    </svg>
+  </div>
+
+  <div class="code-wrap">
+    <div class="code-bar"><div style="display:flex;align-items:center;gap:10px"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-fname">logistic.py</span></div><span class="code-lang">python</span></div>
+    <pre><span class="var">model</span> = <span class="cls">LogisticRegression</span>(<span class="var">C</span>=<span class="num">1.0</span>, <span class="var">max_iter</span>=<span class="num">1000</span>)
+<span class="var">model</span>.<span class="fn">fit</span>(<span class="var">X_train</span>, <span class="var">y_train</span>)
+<span class="var">y_pred</span> = <span class="var">model</span>.<span class="fn">predict</span>(<span class="var">X_test</span>)</pre>
+  </div>
+
+  <p><strong>C=1.0:</strong> نفس مفهوم الـ regularization زي الـ SVM. C عالي = بيـfit الـ training data أكتر.</p>
+  <p><strong>max_iter=1000:</strong> عدد خطوات الـ optimization. الـ default (100) مكانش كافي لـ converge على الداتا دي فاتعمل 1000.</p>
+  <p>الـ Logistic Regression <strong>أسرع بكتير</strong> من الـ SVM وبيطلع accuracy قريب (~83.8%) مع ميزة إضافية: تقدر تشوف مباشرة أي features ليها أكبر تأثير من خلال الـ coefficients.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>قيمة C</th><th>Accuracy</th><th>Precision</th><th>Recall</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">C = 0.01</td><td class="mono">83.84%</td><td class="green">0.72</td><td class="mono">0.52</td></tr>
+        <tr><td class="hi">C = 1.0 ← الأفضل</td><td class="mono">83.84%</td><td class="mono">0.70</td><td class="mono">0.56</td></tr>
+        <tr><td class="mono">C = 100</td><td class="mono">83.82%</td><td class="mono">0.69</td><td class="mono">0.56</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════
+     DECISION TREE
+══════════════════════════════ -->
+<section id="dt">
+  <div class="sec-eye">// 05 — ملف 4</div>
+  <h2 class="sec">Decision Tree</h2>
+  <p>الـ Decision Tree بيعمل predictions بإنه بيسأل سلسلة من الأسئلة الـ Yes/No عن الـ features، بيعمل split في كل خطوة لحد ما يوصل لقرار. ده أسهل model تفسره — حرفياً زي الـ flowchart.</p>
+
+  <div class="fig">
+    <svg width="100%" viewBox="0 0 560 230" xmlns="http://www.w3.org/2000/svg">
+      <rect width="560" height="230" fill="#18181c" rx="8"/>
+      <rect x="200" y="12" width="160" height="36" rx="6" fill="#1f1f24" stroke="#e8c547" stroke-width="1.5"/>
+      <text x="280" y="34" text-anchor="middle" fill="#e8c547" font-family="IBM Plex Mono" font-size="10">education-num &gt; 12?</text>
+      <text x="186" y="68" text-anchor="middle" fill="#4ecdc4" font-family="IBM Plex Mono" font-size="8">No</text>
+      <text x="376" y="68" text-anchor="middle" fill="#4ecdc4" font-family="IBM Plex Mono" font-size="8">Yes</text>
+      <line x1="240" y1="48" x2="163" y2="84" stroke="#2a2a32" stroke-width="1"/>
+      <line x1="320" y1="48" x2="397" y2="84" stroke="#2a2a32" stroke-width="1"/>
+      <rect x="83" y="84" width="160" height="36" rx="6" fill="#1f1f24" stroke="#2a2a32"/>
+      <text x="163" y="106" text-anchor="middle" fill="#c5c2cc" font-family="IBM Plex Mono" font-size="10">capital-gain &gt; 0?</text>
+      <rect x="317" y="84" width="160" height="36" rx="6" fill="#1f1f24" stroke="#2a2a32"/>
+      <text x="397" y="106" text-anchor="middle" fill="#c5c2cc" font-family="IBM Plex Mono" font-size="10">hours/week &gt; 40?</text>
+      <line x1="133" y1="120" x2="95"  cy="155" stroke="#2a2a32" stroke-width="1"/>
+      <line x1="133" y1="120" x2="95"  y2="155" stroke="#2a2a32" stroke-width="1"/>
+      <line x1="193" y1="120" x2="231" y2="155" stroke="#2a2a32" stroke-width="1"/>
+      <line x1="357" y1="120" x2="319" y2="155" stroke="#2a2a32" stroke-width="1"/>
+      <line x1="437" y1="120" x2="475" y2="155" stroke="#2a2a32" stroke-width="1"/>
+      <rect x="48"  y="155" width="95" height="30" rx="5" fill="rgba(78,205,196,.1)" stroke="rgba(78,205,196,.35)"/>
+      <text x="95"  y="175" text-anchor="middle" fill="#4ecdc4" font-family="IBM Plex Mono" font-size="10">≤50K</text>
+      <rect x="184" y="155" width="95" height="30" rx="5" fill="rgba(255,107,107,.1)" stroke="rgba(255,107,107,.35)"/>
+      <text x="231" y="175" text-anchor="middle" fill="#ff6b6b" font-family="IBM Plex Mono" font-size="10">&gt;50K</text>
+      <rect x="272" y="155" width="95" height="30" rx="5" fill="rgba(78,205,196,.1)" stroke="rgba(78,205,196,.35)"/>
+      <text x="319" y="175" text-anchor="middle" fill="#4ecdc4" font-family="IBM Plex Mono" font-size="10">≤50K</text>
+      <rect x="428" y="155" width="95" height="30" rx="5" fill="rgba(255,107,107,.1)" stroke="rgba(255,107,107,.35)"/>
+      <text x="475" y="175" text-anchor="middle" fill="#ff6b6b" font-family="IBM Plex Mono" font-size="10">&gt;50K</text>
+      <text x="280" y="218" text-anchor="middle" fill="#6b6875" font-family="IBM Plex Mono" font-size="8">مبسط — الـ tree الحقيقية عندها levels أكتر بكتير</text>
+    </svg>
+  </div>
+
+  <p>الـ model ده بيستخدم <strong>GridSearchCV</strong> عشان يجرب كتير من combinations من الـ hyperparameters ويلاقي الأحسن أوتوماتيك. ده بيتسمى <strong>Hyperparameter Tuning</strong>.</p>
+
+  <div class="code-wrap">
+    <div class="code-bar"><div style="display:flex;align-items:center;gap:10px"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-fname">decision_tree.py — GridSearchCV</span></div><span class="code-lang">python</span></div>
+    <pre><span class="var">param_grid</span> = {
+    <span class="str">'max_depth'</span>:        [<span class="num">6</span>, <span class="num">8</span>, <span class="num">10</span>, <span class="num">12</span>],
+    <span class="str">'min_samples_split'</span>: [<span class="num">5</span>, <span class="num">10</span>, <span class="num">15</span>],
+    <span class="str">'min_samples_leaf'</span>:  [<span class="num">5</span>, <span class="num">10</span>, <span class="num">15</span>],
+    <span class="str">'criterion'</span>:        [<span class="str">'gini'</span>, <span class="str">'entropy'</span>]
+}
+<span class="var">grid</span> = <span class="cls">GridSearchCV</span>(<span class="var">estimator</span>=<span class="var">model</span>, <span class="var">param_grid</span>=<span class="var">param_grid</span>,
+                   <span class="var">cv</span>=<span class="num">5</span>, <span class="var">scoring</span>=<span class="str">"accuracy"</span>, <span class="var">n_jobs</span>=<span class="op">-1</span>)
+<span class="var">grid</span>.<span class="fn">fit</span>(<span class="var">x_train</span>, <span class="var">y_train</span>)</pre>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="cname" style="color:var(--accent)">max_depth</div>
+      <div class="cdesc">عدد مستويات الأسئلة في الـ tree. tree عميقة = بتحفظ الـ training data (overfitting). شجرة ضحلة = بتـgeneralize أحسن.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--teal)">min_samples_split</div>
+      <div class="cdesc">أقل عدد samples في node عشان تقدر تعمل split. قيمة عالية = tree أبسط.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--purple)">criterion: gini/entropy</div>
+      <div class="cdesc">المعادلة المستخدمة لقياس الـ impurity عند قرار الـ split. الاتنين بيطلعوا نتايج قريبة عادة.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--red)">cv=5</div>
+      <div class="cdesc">5-Fold Cross Validation — بيقسم الـ training data لـ 5 أجزاء، بيتدرب على 4 ويتحقق على 1، ويكرر 5 مرات. أموثوق من split واحدة.</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>n_jobs=-1</strong> معناها "استخدم كل الـ CPU cores المتاحة" — بيخلي الـ GridSearchCV يشتغل بشكل parallel ويجرب combinations كتير في نفس الوقت.
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════
+     PREDICTOR
+══════════════════════════════ -->
+<section id="predictor">
+  <div class="sec-eye">// 06 — ملف 5</div>
+  <h2 class="sec">predictor.py — التطبيق النهائي</h2>
+  <p>ده الملف اللي بيربط كل حاجة مع بعض. بيحمّل كل الـ preprocessing objects والـ models المحفوظة، بياخد input من المستخدم من الـ terminal، بيطبق نفس الـ preprocessing pipeline، ويطلع prediction.</p>
+
+  <div class="code-wrap">
+    <div class="code-bar"><div style="display:flex;align-items:center;gap:10px"><div class="code-dots"><span></span><span></span><span></span></div><span class="code-fname">predictor.py — تحميل وقرار</span></div><span class="code-lang">python</span></div>
+    <pre><span class="cm"># تحميل الـ preprocessing objects المحفوظة</span>
+<span class="var">encoders</span>      = <span class="var">joblib</span>.<span class="fn">load</span>(<span class="str">"encoders.pkl"</span>)
+<span class="var">onehotencoder</span> = <span class="var">joblib</span>.<span class="fn">load</span>(<span class="str">"onehotencoder.pkl"</span>)
+<span class="var">scale</span>         = <span class="var">joblib</span>.<span class="fn">load</span>(<span class="str">"scale.pkl"</span>)
+
+<span class="cm"># المستخدم يختار الـ model</span>
+<span class="kw">if</span> <span class="var">choice</span> == <span class="str">"1"</span>:   <span class="var">model</span> = <span class="var">joblib</span>.<span class="fn">load</span>(<span class="str">"SVMmodel.pkl"</span>)
+<span class="kw">elif</span> <span class="var">choice</span> == <span class="str">"2"</span>: <span class="var">model</span> = <span class="var">joblib</span>.<span class="fn">load</span>(<span class="str">"best_decision_tree_model.pkl"</span>)
+<span class="kw">elif</span> <span class="var">choice</span> == <span class="str">"3"</span>: <span class="var">model</span> = <span class="var">joblib</span>.<span class="fn">load</span>(<span class="str">"Logistic_Model.pkl"</span>)</pre>
+  </div>
+
+  <p>بعد ما المستخدم يدخل البيانات، الـ predictor بيطبق <strong>نفس خطوات الـ preprocessing</strong> بالظبط:</p>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body"><div class="step-t">Clean</div><div class="step-d">شيل الـ spaces والنقط من الـ strings — نفس الـ clean() في preprocessing.py.</div></div>
+  </div>
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body"><div class="step-t">Label Encode الـ sex</div><div class="step-d">بيستخدم الـ encoders dict المحفوظة عشان يطبق نفس الـ Male=1/Female=0 mapping.</div></div>
+  </div>
+  <div class="step">
+    <div class="step-n">3</div>
+    <div class="step-body"><div class="step-t">One-Hot Encode الأعمدة الـ categorical</div><div class="step-d">بيستخدم الـ onehotencoder المحفوظ. بيعمل نفس الـ 108-column format اللي الـ model اتعلم عليه.</div></div>
+  </div>
+  <div class="step">
+    <div class="step-n">4</div>
+    <div class="step-body"><div class="step-t">Scale الأعمدة الـ numeric</div><div class="step-d">بيستخدم الـ MinMaxScaler المحفوظ — بيطبق نفس الـ min/max من الـ training data.</div></div>
+  </div>
+  <div class="step">
+    <div class="step-n">5</div>
+    <div class="step-body">
+      <div class="step-t">reindex — خطوة مهمة جداً</div>
+      <div class="step-d"><code>user_df.reindex(columns=features, fill_value=0)</code> — بيضمن إن الأعمدة في نفس الترتيب اللي الـ model اتدرب عليه. أي عمود ناقص بيتملى بـ 0. من غير الخطوة دي الـ model هيتخلط.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-n">6</div>
+    <div class="step-body">
+      <div class="step-t">Predict ورجّع الـ label</div>
+      <div class="step-d">الـ model بيطلع 0 أو 1. الـ <code>inverse_transform()</code> بيحوله تاني للـ label المقروء: <strong>≤50K</strong> أو <strong>&gt;50K</strong>.</div>
+    </div>
+  </div>
+
+  <div class="output">
+<span class="og">===================</span>
+<span class="ol">Predicted Income: </span><span class="og">&gt;50K</span>
+<span class="og">===================</span>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════
+     COMPARISON
+══════════════════════════════ -->
+<section id="compare">
+  <div class="sec-eye">// 07 — الملخص</div>
+  <h2 class="sec">مقارنة الـ Models</h2>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>الـ Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>السرعة</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Logistic Regression</strong></td>
+          <td class="hi">83.84%</td>
+          <td class="mono">0.70</td>
+          <td class="green">0.56</td>
+          <td class="mono">0.62</td>
+          <td style="color:var(--green)">⚡ سريع جداً</td>
+        </tr>
+        <tr>
+          <td><strong>SVM</strong></td>
+          <td class="mono">83.74%</td>
+          <td class="mono">0.70</td>
+          <td class="mono">0.54</td>
+          <td class="mono">0.61</td>
+          <td style="color:var(--red)">🐢 بطيء</td>
+        </tr>
+        <tr>
+          <td><strong>Decision Tree</strong></td>
+          <td class="mono">~86%</td>
+          <td class="mono">varies</td>
+          <td class="mono">varies</td>
+          <td class="mono">varies</td>
+          <td style="color:var(--accent)">⚡ سريع + GridSearch</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="cname" style="color:var(--teal)">الأسرع</div>
+      <div class="cdesc">Logistic Regression — بيتدرب في ثواني، نفس الـ accuracy بتاعت الـ SVM اللي بياخد دقايق.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--purple)">الأسهل تفسيراً</div>
+      <div class="cdesc">Decision Tree — تقدر تقرأ الـ if/else rules اللي اتعلمها. Logistic Regression بتوضح الـ coefficients.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--accent)">الأحسن للداتا المعقدة</div>
+      <div class="cdesc">SVM بـ RBF kernel — بيتعامل مع الـ non-linear patterns اللي الـ models الأبسط بتفوتها.</div>
+    </div>
+    <div class="card">
+      <div class="cname" style="color:var(--red)">الضعف المشترك</div>
+      <div class="cdesc">الـ models الثلاثة بتعاني من Recall منخفض بسبب الـ class imbalance (~75% ≤50K). الحل: class_weight='balanced'.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════
+     CONCLUSION
+══════════════════════════════ -->
+<section id="conclusion">
+  <div class="sec-eye">// 08 — النهاية</div>
+  <h2 class="sec">الخلاصة النهائية</h2>
+  <p>المشروع ده بيبني نظام كامل end-to-end لتصنيف الدخل. من الـ raw census data، بيطبق pipeline كامل للـ preprocessing، بيدرب 3 models مختلفة، بيقيّمهم بشكل دقيق، وبيحطهم في واجهة prediction حية.</p>
+
+  <div class="note blue">
+    <strong>أهم درس من المشروع:</strong> الـ preprocessing والـ evaluation بالأهمية بالظبط زي الـ model نفسه. داتا متحضرة كويس بـ encoding وscaling صح بيأثر مباشرة على تعلم الـ model patterns الصح — والتقييم الكامل بـ Precision وRecall وF1 بيكشف نقاط الضعف اللي الـ Accuracy لوحدها كانت هتخبيها.
+  </div>
+
+  <div style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--border); text-align:center;">
+    <span style="font-family:var(--mono); font-size:11px; color:var(--muted)">Income AI Project — AI Lab 7 — شرح كامل بالعربي</span>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+const links = document.querySelectorAll('.nav-a');
+const sections = document.querySelectorAll('section[id]');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting)
+      links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+  });
+}, { rootMargin: '-15% 0px -70% 0px' });
+sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
